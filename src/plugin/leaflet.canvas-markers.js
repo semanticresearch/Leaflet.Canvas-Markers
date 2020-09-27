@@ -6,10 +6,11 @@ function layerFactory(L) {
 
         //Add event listeners to initialized section.
         initialize: function (options) {
-
             L.setOptions(this, options);
             this._onClickListeners = [];
             this._onHoverListeners = [];
+            this._onMouseOverListeners = [];
+            this._onMouseOutListeners = [];
             this._rawMarkers = [];
         },
 
@@ -404,6 +405,14 @@ function layerFactory(L) {
             this._onHoverListeners.push(listener);
         },
 
+        addOnMouseOverListener: function (listener) {
+            this._onMouseOverListeners.push(listener);
+        },
+
+        addOnMouseOutListener: function (listener) {
+            this._onMouseOutListeners.push(listener);
+        },
+
         _executeListeners: function (event) {
 
             if (!this._markers) return;
@@ -433,6 +442,16 @@ function layerFactory(L) {
                 }
 
                 if (event.type==="mousemove") {
+                    if (!me._lastRet) {
+                        me._lastRet = ret;
+                        me._onMouseOverListeners.forEach(function (listener) { listener(event, me._lastRet); });
+                    } else if (me._lastRet !== ret) {
+                        me._onMouseOutListeners.forEach(function (listener) { listener(event, me._lastRet); });
+                        me._lastRet = ret;
+                        me._onMouseOverListeners.forEach(function (listener) { listener(event, me._lastRet); });
+                    }
+
+
                     var hasTooltip = ret[0].data.getTooltip();
                     if(hasTooltip) {
                         me._openToolTip = ret[0].data;
@@ -443,7 +462,10 @@ function layerFactory(L) {
                 }
             }
             else {
-
+                if (event.type==="mousemove" && me._lastRet) {
+                    me._onMouseOutListeners.forEach(function (listener) { listener(event, me._lastRet); });
+                    delete me._lastRet;
+                }
                 me._map._container.style.cursor="";
             }
         }
