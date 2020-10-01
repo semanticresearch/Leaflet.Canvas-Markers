@@ -167,7 +167,7 @@ function layerFactory(L) {
             }
 
             Object.keys(this._genericListenersMap)
-                .forEach((evtName) => map.off(evtName, this._executeGenericListeners, this));
+                .forEach(function(evtName) {map.off(evtName, this._executeGenericListeners, this)});
         },
 
         addTo: function (map) {
@@ -191,7 +191,7 @@ function layerFactory(L) {
 
             Object.keys(evtMap).forEach((evtName) => {
                 // Verifies if map is already listening for this event
-                const notListeningForEvent = !this._genericListenersMap[evtName];
+                var notListeningForEvent = !this._genericListenersMap[evtName];
 
                 this._genericListenersMap[evtName] = this._genericListenersMap[evtName] || [];
                 this._genericListenersMap[evtName].push(evtMap[evtName]);
@@ -202,17 +202,14 @@ function layerFactory(L) {
             });
         },
 
-        _executeGenericListeners: function (event) {
+        _executeGenericListeners: function (evt) {
             if (!this._markers) return;
 
-            var x = event.containerPoint.x;
-            var y = event.containerPoint.y;
+            var x = evt.containerPoint.x;
+            var y = evt.containerPoint.y;
             var ret = this._markers.search({minX: x, minY: y, maxX: x, maxY: y});
-
-            if (ret && ret.length) {
-                const listeners = this._genericListenersMap[event.type];
-                listeners.forEach(function (listener) {listener(event, ret);});
-            }
+            var listeners = this._genericListenersMap[evt.type];
+            listeners.forEach(function (listener) {listener(evt, ret);});
         },
 
         _animateZoom: function(event) {
