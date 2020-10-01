@@ -151,6 +151,7 @@ function layerFactory(L) {
         },
 
         onRemove: function (map) {
+            var me = this;
 
             if (this.options.pane) this.getPane().removeChild(this._canvas);
             else map.getPanes().overlayPane.removeChild(this._canvas);
@@ -167,7 +168,7 @@ function layerFactory(L) {
             }
 
             Object.keys(this._genericListenersMap)
-                .forEach(function(evtName) {map.off(evtName, this._executeGenericListeners, this)});
+                .forEach(function(evtName) {map.off(evtName, me._executeGenericListeners, me)});
         },
 
         addTo: function (map) {
