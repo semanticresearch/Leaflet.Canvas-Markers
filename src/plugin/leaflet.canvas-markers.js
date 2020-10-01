@@ -12,6 +12,7 @@ function layerFactory(L) {
             this._onMouseOverListeners = [];
             this._onMouseOutListeners = [];
             this._rawMarkers = [];
+            this._genericListenersMap = {};
         },
 
         setOptions: function (options) {
@@ -164,6 +165,9 @@ function layerFactory(L) {
             if (map._zoomAnimated) {
                 map.off('zoomanim', this._animateZoom, this);
             }
+
+            Object.keys(this._genericListenersMap)
+                .forEach(function(evtName) {map.off(evtName, this._executeGenericListeners, this)});
         },
 
         addTo: function (map) {
@@ -178,6 +182,34 @@ function layerFactory(L) {
             this._markers = null;
             this._rawMarkers = [];
             this._redraw(true);
+        },
+
+        addListener: function (evt, handler) {
+            // If evt is string, evt is the name of event, if not is the map
+            // directly.
+            var evtMap = typeof evt === 'string' ? {[evt]: handler} : evt;
+
+            Object.keys(evtMap).forEach((evtName) => {
+                // Verifies if map is already listening for this event
+                var notListeningForEvent = !this._genericListenersMap[evtName];
+
+                this._genericListenersMap[evtName] = this._genericListenersMap[evtName] || [];
+                this._genericListenersMap[evtName].push(evtMap[evtName]);
+
+                if (notListeningForEvent) {
+                    this._map.on(evtName, this._executeGenericListeners, this);
+                }
+            });
+        },
+
+        _executeGenericListeners: function (evt) {
+            if (!this._markers) return;
+
+            var x = evt.containerPoint.x;
+            var y = evt.containerPoint.y;
+            var ret = this._markers.search({minX: x, minY: y, maxX: x, maxY: y});
+            var listeners = this._genericListenersMap[evt.type];
+            listeners.forEach(function (listener) {listener(evt, ret);});
         },
 
         _animateZoom: function(event) {
