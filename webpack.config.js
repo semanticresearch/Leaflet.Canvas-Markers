@@ -12,7 +12,7 @@ const vendors = [
 const plugins = [
     new uglifyPlugin({
         parallel: true,
-        cache: true,
+        cache: false,
         sourceMap: !isProd
     })
 ];
